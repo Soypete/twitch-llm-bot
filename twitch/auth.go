@@ -3,8 +3,10 @@ package twitchirc
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
@@ -13,8 +15,8 @@ import (
 func parseAuthCode(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "could not parse query: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		fmt.Printf("could not parse query: %v", err)
+		http.Error(w, "could not parse query", http.StatusBadRequest)
 	}
 	code := req.FormValue("code")
 	fmt.Fprint(os.Stdout, code)
@@ -35,7 +37,6 @@ func (irc *IRC) AuthTwitch() error {
 		RedirectURL:  "http://localhost:3000/oauth/redirect",
 		Endpoint:     twitch.Endpoint,
 	}
-	// TODO: fix error handling with channels?
 	irc.wg.Add(1)
 
 	// Redirect user to consent page to ask for permission
@@ -45,21 +46,23 @@ func (irc *IRC) AuthTwitch() error {
 		url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 		fmt.Printf("Visit the URL for the auth dialog: %v\n", url)
 
-		// Use the authorization code that is pushed to the redirect
-		// URL. Exchange will do the handshake to retrieve the
-		// initial access token. The HTTP Client returned by
-		// conf.Client will refresh the token as necessary.
+		time.Sleep(5 * time.Second)
+
 		var code string
 		_, err := fmt.Scan(&code)
 		if err != nil {
 			fmt.Println(fmt.Errorf("cannot get input from standard in: %w", err))
 		}
 
+		log.Printf("code: %v", code)
+
 		irc.tok, err = conf.Exchange(ctx, code)
 		if err != nil {
 			fmt.Println(fmt.Errorf("failed to get token with auth code: %w", err))
 		}
-		_ = conf.Client(ctx, irc.tok)
+		fmt.Println("token received")
+		// _ = conf.Client(ctx, irc.tok)
+
 		fmt.Println("start twitch connection")
 		err = irc.connectIRC()
 		if err != nil {
