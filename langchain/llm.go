@@ -8,13 +8,13 @@ import (
 )
 
 func (c Client) SendChat(ctx context.Context, chat string) (string, error) {
-	// llmContent:= llms.TextParts(chat)
-	// content, err := c.llm.GenerateContent(ctx, llmContent)
+	prompt := fmt.Sprintf("This was the last message from twitch chat: %s\n please respond.", chat)
 	content, err := llms.GenerateFromSinglePrompt(ctx,
 		c.llm,
-		chat,
-		llms.WithTemperature(0.8),
-		llms.WithStopWords([]string{"Chat"}),
+		prompt,
+		llms.WithTemperature(0.8), // this is randomness
+		llms.WithStopWords([]string{"Chat", "SoyPete", "SoyUnBot", "twitch", "stream"}),
+		llms.WithMaxTokens(50),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to get llm response: %w", err)
