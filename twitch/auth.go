@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
@@ -46,11 +45,10 @@ func (irc *IRC) AuthTwitch() error {
 		url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 		fmt.Printf("Visit the URL for the auth dialog: %v\n", url)
 
-		time.Sleep(5 * time.Second)
-
 		var code string
 		_, err := fmt.Scan(&code)
 		if err != nil {
+			// print until we have ctx.done
 			fmt.Println(fmt.Errorf("cannot get input from standard in: %w", err))
 		}
 
@@ -58,17 +56,9 @@ func (irc *IRC) AuthTwitch() error {
 
 		irc.tok, err = conf.Exchange(ctx, code)
 		if err != nil {
+			// print until we have ctx.done
 			fmt.Println(fmt.Errorf("failed to get token with auth code: %w", err))
 		}
-		fmt.Println("token received")
-		// _ = conf.Client(ctx, irc.tok)
-
-		fmt.Println("start twitch connection")
-		err = irc.connectIRC()
-		if err != nil {
-			fmt.Println(fmt.Errorf("failed to connect over IRC: %w", err))
-		}
-		fmt.Println("connection completed")
 	}()
 	irc.wg.Wait()
 	return nil

@@ -3,16 +3,16 @@ package langchain
 import (
 	"fmt"
 
+	"github.com/Soypete/twitch-llm-bot/database"
 	"github.com/tmc/langchaingo/llms/openai"
 )
 
 type Client struct {
 	llm *openai.LLM
+	db  database.Postgres
 }
 
-// TODO: add OpenAI API key as an option
-// TODO: add config for options
-func Setup() (*Client, error) {
+func Setup(db database.Postgres) (*Client, error) {
 	opts := []openai.Option{
 		openai.WithBaseURL("http://127.0.0.1:8080"),
 	}
@@ -20,5 +20,8 @@ func Setup() (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OpenAI LLM: %w", err)
 	}
-	return &Client{llm: llm}, nil
+	return &Client{
+		llm: llm,
+		db:  db,
+	}, nil
 }
