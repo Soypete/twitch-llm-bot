@@ -1,11 +1,10 @@
 package twitchirc
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"sync"
 
+	"github.com/Soypete/twitch-llm-bot/database"
 	"github.com/Soypete/twitch-llm-bot/langchain"
 	v2 "github.com/gempir/go-twitch-irc/v2"
 	"github.com/pkg/errors"
@@ -16,18 +15,20 @@ const peteTwitchChannel = "soypetetech"
 
 // IRC Connection to the twitch IRC server.
 type IRC struct {
+	db       database.Postgres
 	wg       sync.WaitGroup
 	Client   *v2.Client
 	tok      *oauth2.Token
 	llm      *langchain.Client
-	msgQueue chan string
+	msgQueue chan v2.PrivateMessage
 }
 
 // SetupTwitchIRC sets up the IRC, configures oauth, and inits connection functions.
-func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client) (*IRC, error) {
+func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client, db database.Postgres) (*IRC, error) {
 	irc := &IRC{
+		db:       db,
 		wg:       wg,
-		msgQueue: make(chan string),
+		msgQueue: make(chan v2.PrivateMessage),
 		llm:      llm,
 	}
 	err := irc.AuthTwitch()
@@ -39,28 +40,16 @@ func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client) (*IRC, error) {
 }
 
 // connectIRC gets the auth and connects to the twitch IRC server for channel.
-func (irc *IRC) connectIRC() error {
+func (irc *IRC) ConnectIRC() error {
 	log.Println("Connecting to twitch IRC")
 	c := v2.NewClient(peteTwitchChannel, "oauth:"+irc.tok.AccessToken)
 	c.Join(peteTwitchChannel)
 	c.OnConnect(func() { c.Say(peteTwitchChannel, "soy_un_bot esta lista") })
 	c.OnPrivateMessage(func(msg v2.PrivateMessage) {
-		fmt.Println(msg.Message)
-		// fmt.Println(irc.msgQueue)
-		// for m := range irc.msgQueue {
-		// 	c.Say(peteTwitchChannel, m)
-		// }
-		rsp, err := irc.llm.SendChat(context.Background(), msg.Message)
-		if err != nil {
-			fmt.Println(err)
-		}
-		c.Say(peteTwitchChannel, rsp)
+		irc.msgQueue <- msg
 	})
-	fmt.Println("Connecting to twitch IRC")
-	err := c.Connect()
-	if err != nil {
-		return errors.Wrap(err, "failed to connect over IRC")
-	}
+
+	go irc.HandleChat()
 	irc.Client = c
 	return nil
 }
