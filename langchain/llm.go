@@ -6,8 +6,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/tmc/langchaingo/llms"
 )
+
+var stopWords = []string{"twitch", "stream", "SoyPeteTech", "bot", "assistant", "silent", "software"}
 
 func (c Client) PromptWithoutChat() (string, error) {
 	ctx := context.Background()
@@ -16,7 +19,7 @@ func (c Client) PromptWithoutChat() (string, error) {
 		"The SoyPeteTech twitch channel has been unusually silent lately. Please generate a creative and kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
 		llms.WithTemperature(0.8),
 		llms.WithMaxLength(500),
-		llms.WithStopWords([]string{"twitch, SoyPeteTech, bot, assistant, silent, stream, software"}),
+		llms.WithStopWords(stopWords),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to get llm response: %w", err)
@@ -24,42 +27,33 @@ func (c Client) PromptWithoutChat() (string, error) {
 	return content, nil
 }
 
-func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent, error) {
-	var messageHistory []llms.MessageContent
-	// get message history from database
-	messages, err := c.db.QueryMessageHistory(interval)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(messages) == 0 {
-		return nil, fmt.Errorf("no messages found")
-	}
-	for _, message := range messages {
-		prompt := fmt.Sprintf("%s: %s", message.Username, message.Message)
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, prompt))
-	}
-	return messageHistory, nil
+func GenerateUUID() uuid.UUID {
+	return uuid.New()
+}
+func (c Client) clearMessageHistory() {
+	// Clear the message history
+	c.LastChatID = GenerateUUID()
+	c.ChatHistory = []llms.MessageContent{}
 }
 
 func (c Client) PromptWithChat(interval time.Duration) (string, error) {
-	log.Println("Getting message history")
-	messageHistory, err := c.GetMessageHistory(interval)
-	if err != nil {
-		return "", fmt.Errorf("failed to get message history: %w", err)
-	}
 	ctx := context.Background()
 
 	log.Println("Generating bot response")
-	resp, err := c.llm.GenerateContent(ctx, messageHistory,
+	resp, err := c.llm.GenerateContent(ctx, c.ChatHistory,
 		llms.WithCandidateCount(1),
 		llms.WithMaxLength(500),
 		llms.WithTemperature(0.8),
-		llms.WithStopWords([]string{"twitch", "stream", "SoyPeteTech", "bot", "assistant", "silent", "software"}))
+		llms.WithStopWords(stopWords),
+	)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
-	log.Println(resp)
 
+	c.clearMessageHistory()
+	if err != nil {
+		return "", fmt.Errorf("failed to clear message history: %w", err)
+	}
 	err = c.db.InsertResponse(resp)
 	if err != nil {
 		log.Println(err)

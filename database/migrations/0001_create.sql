@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE twitch_chat (
+CREATE TABLE IF NOT EXISTS twitch_chat (
 		id serial PRIMARY KEY,
 		username text,
 		message text,

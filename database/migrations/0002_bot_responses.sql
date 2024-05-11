@@ -1,6 +1,6 @@
 -- +goose Up
 
-CREATE TABLE bot_response (
+CREATE TABLE IF NOT EXISTS bot_response (
 		id serial PRIMARY KEY,
 		model_name text,
 		response text,

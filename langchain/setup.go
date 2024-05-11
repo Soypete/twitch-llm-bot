@@ -2,14 +2,21 @@ package langchain
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Soypete/twitch-llm-bot/database"
+	"github.com/google/uuid"
+	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/openai"
 )
 
 type Client struct {
-	llm *openai.LLM
-	db  database.Postgres
+	llm              *openai.LLM
+	db               database.Postgres
+	ChatHistory      []llms.MessageContent
+	LastChatID       uuid.UUID
+	CurrentStartTime time.Time
+	Duration         time.Duration
 }
 
 func Setup(db database.Postgres) (*Client, error) {

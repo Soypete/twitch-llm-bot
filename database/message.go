@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	v2 "github.com/gempir/go-twitch-irc/v2"
 )
 
@@ -24,9 +26,10 @@ func (p Postgres) InsertMessage(msg v2.PrivateMessage) error {
 	return nil
 }
 
-func (p Postgres) InsertChatHistory(messages []string) error {
-	query := "INSERT INTO twitch_chat (chats, created_at) VALUES ($1, $2)"
-	_, err := p.connections.ExecContext(context.Background(), query, messages, time.Now())
+func (p Postgres) AppendChatHistory(chatID uuid.UUID, message string, startTime time.Time, duration time.Duration) error {
+	query := `INSERT INTO chat_promts (id, chats, start_time, end_time) VALUES ($1, $2, $3, $4) 
+	on conflict (id) do update array_append(chats, $2)`
+	_, err := p.connections.ExecContext(context.Background(), query, chatID, message, startTime, startTime.Add(-duration))
 	if err != nil {
 		return fmt.Errorf("error inserting chat history: %w", err)
 	}
