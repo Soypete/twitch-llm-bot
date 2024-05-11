@@ -14,6 +14,10 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+	// this allows for a long call to the llm
+	ctx, _ = context.WithTimeout(ctx, 30*time.Second)
+
 	// setup postgres connection
 	db, err := database.NewPostgres()
 	if err != nil {
@@ -41,20 +45,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// This is a cron style job that will read the chat history and generate a prompt
 	go func() {
 		log.Println("Starting prompt loop")
 		for {
-			timeout := 1 * time.Minute
+			// TODO: make this a flag
+			timeout := 5 * time.Minute
 			time.Sleep(timeout)
 			log.Println("Getting prompt")
-			prompt, err := llm.PromptWithChat(timeout)
+			prompt, err := llm.PromptWithChat(ctx, timeout)
 			// weird error handling
 			switch {
 			case err == nil:
+				// TODOL: make the channel name a flag
 				irc.Client.Say("soypetetech", prompt)
 			case strings.Contains(err.Error(), "no messages found"):
 				log.Println("No messages found, generating prompt without chat")
-				prompt, err = llm.PromptWithoutChat()
+				prompt, err = llm.PromptWithoutChat(ctx)
 				if err != nil {
 					log.Println(err)
 				}
@@ -72,8 +80,8 @@ func main() {
 	}
 }
 
+// TODO: figure out how to leverage os.Signal to shutdown the bot
 func Shutdown(ctx context.Context, wg *sync.WaitGroup) {
 	ctx.Done()
 	log.Println("Shutting down")
-
 }

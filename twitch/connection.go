@@ -15,21 +15,19 @@ const peteTwitchChannel = "soypetetech"
 
 // IRC Connection to the twitch IRC server.
 type IRC struct {
-	db       database.Postgres
-	wg       sync.WaitGroup
-	Client   *v2.Client
-	tok      *oauth2.Token
-	llm      *langchain.Client
-	msgQueue chan v2.PrivateMessage
+	db     database.Postgres
+	wg     sync.WaitGroup
+	Client *v2.Client
+	tok    *oauth2.Token
+	llm    *langchain.Client
 }
 
 // SetupTwitchIRC sets up the IRC, configures oauth, and inits connection functions.
 func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client, db database.Postgres) (*IRC, error) {
 	irc := &IRC{
-		db:       db,
-		wg:       wg,
-		msgQueue: make(chan v2.PrivateMessage),
-		llm:      llm,
+		db:  db,
+		wg:  wg,
+		llm: llm,
 	}
 	err := irc.AuthTwitch()
 	if err != nil {
@@ -46,10 +44,9 @@ func (irc *IRC) ConnectIRC() error {
 	c.Join(peteTwitchChannel)
 	c.OnConnect(func() { c.Say(peteTwitchChannel, "soy_un_bot esta lista") })
 	c.OnPrivateMessage(func(msg v2.PrivateMessage) {
-		irc.msgQueue <- msg
+		irc.HandleChat(msg)
 	})
 
-	go irc.HandleChat()
 	irc.Client = c
 	return nil
 }
