@@ -11,12 +11,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// TODO: this should set by the flag
 const peteTwitchChannel = "soypetetech"
 
 // IRC Connection to the twitch IRC server.
 type IRC struct {
 	db     database.Postgres
 	wg     sync.WaitGroup
+	mu     sync.Mutex
 	Client *v2.Client
 	tok    *oauth2.Token
 	llm    *langchain.Client
@@ -27,6 +29,7 @@ func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client, db database.Postgr
 	irc := &IRC{
 		db:  db,
 		wg:  wg,
+		mu:  sync.Mutex{},
 		llm: llm,
 	}
 	err := irc.AuthTwitch()
@@ -37,7 +40,7 @@ func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client, db database.Postgr
 	return irc, nil
 }
 
-// connectIRC gets the auth and connects to the twitch IRC server for channel.
+// ConnectIRC gets the auth and connects to the twitch IRC server for channel.
 func (irc *IRC) ConnectIRC() error {
 	log.Println("Connecting to twitch IRC")
 	c := v2.NewClient(peteTwitchChannel, "oauth:"+irc.tok.AccessToken)
