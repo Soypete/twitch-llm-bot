@@ -22,8 +22,7 @@ func (irc *IRC) HandleChat(msg v2.PrivateMessage) {
 		llms.TextParts(llms.ChatMessageTypeHuman, msg.User.DisplayName, msg.Message))
 
 	chat := fmt.Sprintf("%s: %s", msg.User.DisplayName, msg.Message)
-	err := irc.db.AppendChatHistory(ctx, irc.llm.LastChatID, chat, irc.llm.CurrentStartTime, irc.llm.Duration)
-	if err != nil {
+	if err := irc.db.AppendChatHistory(ctx, irc.llm.LastChatID, chat, irc.llm.CurrentStartTime, irc.llm.Duration); err != nil {
 		log.Printf("Error appending chat history: %v", err)
 	}
 }

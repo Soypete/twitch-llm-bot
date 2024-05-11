@@ -27,7 +27,7 @@ func (p Postgres) InsertMessage(ctx context.Context, msg v2.PrivateMessage) erro
 }
 
 func (p Postgres) AppendChatHistory(ctx context.Context, chatID uuid.UUID, message string, startTime time.Time, duration time.Duration) error {
-	query := `INSERT INTO chat_promts (id, chats, start_time, end_time) VALUES ($1, $2, $3, $4) 
+	query := `INSERT INTO chat_prompts (id, chats, start_time, end_time) VALUES ($1, $2, $3, $4) 
 	on conflict (id) do update array_append(chats, $2)`
 	_, err := p.connections.ExecContext(context.Background(), query, chatID, message, startTime, startTime.Add(-duration))
 	if err != nil {

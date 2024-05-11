@@ -16,7 +16,7 @@ import (
 func main() {
 	ctx := context.Background()
 	// this allows for a long call to the llm
-	ctx, _ = context.WithTimeout(ctx, 30*time.Second)
+	ctx, _ = context.WithTimeout(ctx, 120*time.Second)
 
 	// setup postgres connection
 	db, err := database.NewPostgres()
@@ -51,7 +51,7 @@ func main() {
 		log.Println("Starting prompt loop")
 		for {
 			// TODO: make this a flag
-			timeout := 5 * time.Minute
+			timeout := 1 * time.Minute
 			time.Sleep(timeout)
 			log.Println("Getting prompt")
 			prompt, err := llm.PromptWithChat(ctx, timeout)
@@ -59,14 +59,16 @@ func main() {
 			switch {
 			case err == nil:
 				// TODOL: make the channel name a flag
-				irc.Client.Say("soypetetech", prompt)
+				log.Println("Prompt: ", prompt)
+				// irc.Client.Say("soypetetech", prompt)
 			case strings.Contains(err.Error(), "no messages found"):
 				log.Println("No messages found, generating prompt without chat")
 				prompt, err = llm.PromptWithoutChat(ctx)
 				if err != nil {
 					log.Println(err)
 				}
-				irc.Client.Say("soypetetech", prompt)
+				log.Println("Prompt: ", prompt)
+				// irc.Client.Say("soypetetech", prompt)
 			default:
 				log.Println(err)
 			}

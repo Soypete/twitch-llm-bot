@@ -18,7 +18,7 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 		c.llm,
 		"The SoyPeteTech twitch channel has been unusually silent lately. Please generate a creative and kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
 		llms.WithTemperature(0.8),
-		llms.WithMaxLength(500),
+		llms.WithMaxLength(50),
 		llms.WithStopWords(stopWords),
 	)
 	if err != nil {
@@ -42,7 +42,7 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 	log.Println("Generating bot response")
 	resp, err := c.llm.GenerateContent(ctx, c.ChatHistory,
 		llms.WithCandidateCount(1),
-		llms.WithMaxLength(500),
+		llms.WithMaxLength(50),
 		llms.WithTemperature(0.8),
 		llms.WithStopWords(stopWords),
 	)
@@ -51,7 +51,7 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 	}
 
 	c.clearMessageHistory()
-	err = c.db.InsertResponse(ctx, resp)
+	err = c.db.InsertAllResponses(ctx, c.LastChatID, resp)
 	if err != nil {
 		log.Println(err)
 	}

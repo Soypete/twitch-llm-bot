@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS bot_responses (
 		model_name text,
 		responses text[], -- array of messages produced by the model
 		stop_reason text[],
-		twith_chat_prompt_id int references twitch_chat_promts (id),		
+		twith_chat_prompt_id uuid references chat_prompts (id),		
 		created_at timestamptz DEFAULT NOW()
 		);
 
