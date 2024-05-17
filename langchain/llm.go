@@ -18,7 +18,7 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 		c.llm,
 		"The SoyPeteTech twitch channel has been unusually silent lately. Please generate a creative and kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
 		llms.WithTemperature(0.8),
-		llms.WithMaxLength(50),
+		llms.WithMaxToken(50),
 		llms.WithStopWords(stopWords),
 	)
 	if err != nil {
