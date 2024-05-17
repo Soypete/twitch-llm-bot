@@ -45,7 +45,8 @@ func (irc *IRC) ConnectIRC(ctx context.Context) error {
 	log.Println("Connecting to twitch IRC")
 	c := v2.NewClient(peteTwitchChannel, "oauth:"+irc.tok.AccessToken)
 	c.Join(peteTwitchChannel)
-	c.OnConnect(func() { c.Say(peteTwitchChannel, "soy_un_bot esta lista") })
+	// TODO: have predro introduce itself
+	c.OnConnect(func() { c.Say(peteTwitchChannel, "Hello, my name is Pedro_el_asistente I am here to help you.") })
 	c.OnPrivateMessage(func(msg v2.PrivateMessage) {
 		irc.HandleChat(ctx, msg)
 	})

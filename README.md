@@ -16,7 +16,11 @@ go run main.go
 
 your secrets should contain
 
- `bash export OPENAI_API_KEY export TWITCH_CLIENT_ID export TWITCH_CLIENT_SECRET`
+`bash export OPENAI_API_KEY export TWITCH_CLIENT_ID export TWITCH_CLIENT_SECRET`
+
+## Notes:
+
+So far the longest that the bot has taken to respond is 5 minutes, so we need to account for that in the tmeout the api call.
 
 ## TODO
 
