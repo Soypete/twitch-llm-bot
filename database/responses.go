@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/tmc/langchaingo/llms"
 )
 
@@ -17,7 +18,7 @@ func (p Postgres) InsertResponse(ctx context.Context, resp *llms.ContentResponse
 		query := "INSERT INTO bot_response (model_name, response, stop_reason, was_successful) VALUES ($1, $2, $3, $4)"
 		_, err := p.connections.ExecContext(ctx, query, p.modelName, choice.Content, choice.StopReason, isUsed)
 		if err != nil {
-			return fmt.Errorf("error upserting response: %w", err)
+			return fmt.Errorf("error inserting response: %w", err)
 		}
 	}
 	return nil
@@ -31,9 +32,9 @@ func (p Postgres) InsertAllResponses(ctx context.Context, chatId uuid.UUID, resp
 		stopReason = append(stopReason, choice.StopReason)
 	}
 	query := "INSERT INTO bot_responses (model_name, responses, stop_reasons, twitch_chat_id) VALUES ($1, $2, $3, $4)"
-	_, err := p.connections.ExecContext(ctx, query, p.modelName, text, stopReason, chatId)
+	_, err := p.connections.ExecContext(ctx, query, p.modelName, pq.Array(text), stopReason, chatId)
 	if err != nil {
-		return fmt.Errorf("error upserting response: %w", err)
+		return fmt.Errorf("error inserting all responses: %w", err)
 	}
 	return nil
 }
