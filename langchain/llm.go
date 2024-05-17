@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/tmc/langchaingo/llms"
 )
 
+const pedroPrompt = "Your name is Pedro_el_asistente. You are a chat bot that helps out in SoyPeteTech's twitch chat. You are allowed to use links, code, or emotes to express fun messages about software. Helpful links are always appreciated, such as SoyPeteTech's github https://github.com/Soypete, youtube https://www.youtube.com/channel/UCEkM7JXVQIdvz7Z7gG53lqw, or linktree https://linktr.ee/soypete_tech."
+
 func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 	content, err := llms.GenerateFromSinglePrompt(ctx,
 		c.llm,
-		"SoyPeteTech's twitch chat has been unusually silent lately. Send a kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
+		pedroPrompt,
 		llms.WithTemperature(0.8),
 		llms.WithMaxLength(500),
 		llms.WithStopWords([]string{"twitch, SoyPeteTech, bot, assistant, silent, stream, software"}),
@@ -24,7 +27,8 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 }
 
 func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent, error) {
-	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, "The following messages are from SoyPeteTech's twitch chat. Please respond to the chat messages to help spark a conversation. You can talk about software, golang, programming, linux, or large language models.")}
+	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, pedroPrompt),
+		llms.TextParts(llms.ChatMessageTypeSystem, "Here is the twitch chat history for you to respond to:")}
 	// get message history from database
 	messages, err := c.db.QueryMessageHistory(interval)
 	if err != nil {
@@ -34,7 +38,9 @@ func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent
 		return nil, fmt.Errorf("no messages found")
 	}
 	for _, message := range messages {
-		prompt := fmt.Sprintf("%s: %s", message.Username, message.Message)
+		// Experiment using just the text and no username
+		prompt := message.Text
+		// prompt := fmt.Sprintf("%s: %s", message.Username, message.Text)
 		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, prompt))
 	}
 	return messageHistory, nil
@@ -51,7 +57,7 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 		llms.WithCandidateCount(1),
 		llms.WithMaxLength(500),
 		llms.WithTemperature(0.7),
-		llms.WithPresencePenalty(0.1), // 2 is the largest penalty for using a work that has already been used
+		llms.WithPresencePenalty(1.0), // 2 is the largest penalty for using a work that has already been used
 		llms.WithStopWords([]string{"twitch", "stream", "SoyPeteTech", "bot", "assistant", "silent", "software"}))
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
@@ -59,7 +65,15 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 
 	err = c.db.InsertResponse(ctx, resp)
 	if err != nil {
-		log.Println(err)
+		return cleanResponse(resp.Choices[0].Content), fmt.Errorf("failed to write to db: %w", (err))
 	}
-	return resp.Choices[0].Content, nil
+	return cleanResponse(resp.Choices[0].Content), nil
+}
+
+// cleanResponse removes any newlines from the response
+func cleanResponse(resp string) string {
+	// remove any newlines
+	resp = strings.ReplaceAll(resp, "\n", " ")
+	resp = strings.ReplaceAll(resp, "<|im_start|>user", " ")
+	return strings.TrimSpace(resp)
 }
