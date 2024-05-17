@@ -10,13 +10,13 @@ import (
 	v2 "github.com/gempir/go-twitch-irc/v2"
 )
 
-func (p Postgres) InsertMessage(msg v2.PrivateMessage) error {
+func (p Postgres) InsertMessage(ctx context.Context, msg v2.PrivateMessage) error {
 	var isCommand bool
 	if strings.HasPrefix(msg.Message, "!") {
 		isCommand = true
 	}
 	query := "INSERT INTO twitch_chat (username, message, isCommand, created_at) VALUES ($1, $2, $3, $4)"
-	_, err := p.connections.ExecContext(context.Background(), query, msg.User.DisplayName, msg.Message, isCommand, msg.Time)
+	_, err := p.connections.ExecContext(ctx, query, msg.User.DisplayName, msg.Message, isCommand, msg.Time)
 	if err != nil {
 		log.Println("error inserting message: ", err)
 		return fmt.Errorf("error inserting message: %w", err)
@@ -24,9 +24,9 @@ func (p Postgres) InsertMessage(msg v2.PrivateMessage) error {
 	return nil
 }
 
-func (p Postgres) InsertChatHistory(messages []string) error {
+func (p Postgres) InsertChatHistory(ctx context.Context, messages []string) error {
 	query := "INSERT INTO twitch_chat (chats, created_at) VALUES ($1, $2)"
-	_, err := p.connections.ExecContext(context.Background(), query, messages, time.Now())
+	_, err := p.connections.ExecContext(ctx, query, messages, time.Now())
 	if err != nil {
 		return fmt.Errorf("error inserting chat history: %w", err)
 	}
