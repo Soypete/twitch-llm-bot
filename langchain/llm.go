@@ -12,7 +12,7 @@ import (
 func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 	content, err := llms.GenerateFromSinglePrompt(ctx,
 		c.llm,
-		"The SoyPeteTech twitch channel has been unusually silent lately. Please generate a creative and kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
+		"SoyPeteTech's twitch chat has been unusually silent lately. Send a kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
 		llms.WithTemperature(0.8),
 		llms.WithMaxLength(500),
 		llms.WithStopWords([]string{"twitch, SoyPeteTech, bot, assistant, silent, stream, software"}),
@@ -24,7 +24,7 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 }
 
 func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent, error) {
-	var messageHistory []llms.MessageContent
+	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, "The following messages are from SoyPeteTech's twitch chat. Please respond to the chat messages to help spark a conversation. You can talk about software, golang, programming, linux, or large language models.")}
 	// get message history from database
 	messages, err := c.db.QueryMessageHistory(interval)
 	if err != nil {
@@ -46,12 +46,12 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 	if err != nil {
 		return "", fmt.Errorf("failed to get message history: %w", err)
 	}
-
 	log.Println("Generating bot response")
 	resp, err := c.llm.GenerateContent(ctx, messageHistory,
 		llms.WithCandidateCount(1),
 		llms.WithMaxLength(500),
-		llms.WithTemperature(0.8),
+		llms.WithTemperature(0.7),
+		llms.WithPresencePenalty(0.1), // 2 is the largest penalty for using a work that has already been used
 		llms.WithStopWords([]string{"twitch", "stream", "SoyPeteTech", "bot", "assistant", "silent", "software"}))
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
@@ -62,18 +62,4 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 		log.Println(err)
 	}
 	return resp.Choices[0].Content, nil
-}
-
-func (c Client) SendSingleChat(ctx context.Context, chat string) (string, error) {
-	content, err := llms.GenerateFromSinglePrompt(ctx,
-		c.llm,
-		chat,
-		llms.WithTemperature(0.8), // this is randomness
-		llms.WithStopWords([]string{"Chat", "SoyPete", "SoyUnBot", "twitch", "stream"}),
-		llms.WithMaxTokens(50),
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to get llm response: %w", err)
-	}
-	return content, nil
 }
