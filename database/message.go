@@ -12,11 +12,18 @@ import (
 
 func (p Postgres) InsertMessage(ctx context.Context, msg v2.PrivateMessage) error {
 	var isCommand bool
+	username := msg.User.DisplayName
+	message := msg.Message
 	if strings.HasPrefix(msg.Message, "!") {
 		isCommand = true
 	}
+	if strings.Contains(msg.User.DisplayName, "RestreamBot") {
+		words := strings.Split(strings.Trim(msg.Message, "[]"), " ")
+		username = words[1]                    // sets username to the first word after the video source.
+		message = strings.Join(words[2:], " ") // create a clean message without the video source.
+	}
 	query := "INSERT INTO twitch_chat (username, message, isCommand, created_at) VALUES ($1, $2, $3, $4)"
-	_, err := p.connections.ExecContext(ctx, query, msg.User.DisplayName, msg.Message, isCommand, msg.Time)
+	_, err := p.connections.ExecContext(ctx, query, username, message, isCommand, msg.Time)
 	if err != nil {
 		log.Println("error inserting message: ", err)
 		return fmt.Errorf("error inserting message: %w", err)
