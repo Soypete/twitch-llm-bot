@@ -14,6 +14,8 @@ import (
 )
 
 func main() {
+	// TODO: 120 second timeout is to short. we need a better way to handle this
+	ctx := context.Background()
 	// setup postgres connection
 	db, err := database.NewPostgres()
 	if err != nil {
@@ -37,7 +39,7 @@ func main() {
 	}
 	log.Println("starting twitch IRC connection")
 	// long running function
-	err = irc.ConnectIRC()
+	err = irc.ConnectIRC(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -47,17 +49,19 @@ func main() {
 			timeout := 1 * time.Minute
 			time.Sleep(timeout)
 			log.Println("Getting prompt")
-			prompt, err := llm.PromptWithChat(timeout)
+			prompt, err := llm.PromptWithChat(ctx, timeout)
 			// weird error handling
 			switch {
 			case err == nil:
-				irc.Client.Say("soypetetech", prompt)
+				fmt.Println(prompt)
+				// irc.Client.Say("soypetetech", prompt)
 			case strings.Contains(err.Error(), "no messages found"):
 				log.Println("No messages found, generating prompt without chat")
-				prompt, err = llm.PromptWithoutChat()
+				prompt, err = llm.PromptWithoutChat(ctx)
 				if err != nil {
 					log.Println(err)
 				}
+				fmt.Println(prompt)
 				irc.Client.Say("soypetetech", prompt)
 			default:
 				log.Println(err)

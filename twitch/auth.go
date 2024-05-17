@@ -23,11 +23,10 @@ func parseAuthCode(w http.ResponseWriter, req *http.Request) {
 
 // AuthTwitch use oauth2 protocol to retrieve oauth2 token for twitch IRC.
 // _NOTE_: this has not been tested on long standing projects.
-func (irc *IRC) AuthTwitch() error {
+func (irc *IRC) AuthTwitch(ctx context.Context) error {
 	http.HandleFunc("/oauth/redirect", parseAuthCode)
 	go http.ListenAndServe("localhost:3000", nil)
 
-	ctx := context.Background()
 	conf := &oauth2.Config{
 		// TODO: use const for the following.
 		ClientID:     os.Getenv("TWITCH_ID"),

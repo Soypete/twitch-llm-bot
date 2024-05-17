@@ -9,8 +9,7 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-func (c Client) PromptWithoutChat() (string, error) {
-	ctx := context.Background()
+func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 	content, err := llms.GenerateFromSinglePrompt(ctx,
 		c.llm,
 		"The SoyPeteTech twitch channel has been unusually silent lately. Please generate a creative and kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
@@ -41,13 +40,12 @@ func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent
 	return messageHistory, nil
 }
 
-func (c Client) PromptWithChat(interval time.Duration) (string, error) {
+func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (string, error) {
 	log.Println("Getting message history")
 	messageHistory, err := c.GetMessageHistory(interval)
 	if err != nil {
 		return "", fmt.Errorf("failed to get message history: %w", err)
 	}
-	ctx := context.Background()
 
 	log.Println("Generating bot response")
 	resp, err := c.llm.GenerateContent(ctx, messageHistory,
@@ -58,9 +56,8 @@ func (c Client) PromptWithChat(interval time.Duration) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
-	log.Println(resp)
 
-	err = c.db.InsertResponse(resp)
+	err = c.db.InsertResponse(ctx, resp)
 	if err != nil {
 		log.Println(err)
 	}

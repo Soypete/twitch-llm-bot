@@ -1,16 +1,14 @@
 package twitchirc
 
-import "log"
+import (
+	"context"
+	"log"
 
-func (irc *IRC) HandleChat() {
-	// TODO: close if channel is closed
-	for {
-		log.Println("Handling chat messages")
-		msg := <-irc.msgQueue
-		log.Println("writing message to db")
-		go irc.db.InsertMessage(msg)
-		// if err != nil {
-		// 	log.Println("error inserting message: ", err)
-		// }
+	v2 "github.com/gempir/go-twitch-irc/v2"
+)
+
+func (irc *IRC) HandleChat(ctx context.Context, msg v2.PrivateMessage) {
+	if err := irc.db.InsertMessage(ctx, msg); err != nil {
+		log.Println("Failed to insert message into database")
 	}
 }
