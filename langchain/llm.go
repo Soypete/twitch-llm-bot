@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/tmc/langchaingo/llms"
@@ -18,7 +17,7 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 		c.llm,
 		"The SoyPeteTech twitch channel has been unusually silent lately. Please generate a creative and kind chat message to help spark a converastion about software, golang, programming, linux, or food.",
 		llms.WithTemperature(0.8),
-		llms.WithMaxToken(50),
+		llms.WithMaxTokens(50),
 		llms.WithStopWords(stopWords),
 	)
 	if err != nil {
@@ -38,11 +37,11 @@ func (c Client) clearMessageHistory() {
 
 // PromptWithChat will generate a prompt with chat history. After teh message is generated, history will be cleared and the
 // bot responses will be stored in the database.
-func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (string, error) {
+func (c Client) PromptWithChat(ctx context.Context) (string, error) {
 	log.Println("Generating bot response")
 	resp, err := c.llm.GenerateContent(ctx, c.ChatHistory,
 		llms.WithCandidateCount(1),
-		llms.WithMaxLength(50),
+		llms.WithMaxTokens(50),
 		llms.WithTemperature(0.8),
 		llms.WithStopWords(stopWords),
 	)

@@ -54,7 +54,7 @@ func main() {
 			timeout := 1 * time.Minute
 			time.Sleep(timeout)
 			log.Println("Getting prompt")
-			prompt, err := llm.PromptWithChat(ctx, timeout)
+			prompt, err := llm.PromptWithChat(ctx)
 			// weird error handling
 			switch {
 			case err == nil:
