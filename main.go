@@ -58,7 +58,7 @@ func main() {
 			// weird error handling
 			switch {
 			case err == nil:
-				// TODOL: make the channel name a flag
+				// TODO: make the channel name a flag
 				log.Println("Prompt: ", prompt)
 				// irc.Client.Say("soypetetech", prompt)
 			case strings.Contains(err.Error(), "no messages found"):

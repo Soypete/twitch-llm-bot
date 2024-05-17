@@ -40,8 +40,8 @@ func (c Client) clearMessageHistory() {
 func (c Client) PromptWithChat(ctx context.Context) (string, error) {
 	log.Println("Generating bot response")
 	resp, err := c.llm.GenerateContent(ctx, c.ChatHistory,
-		llms.WithCandidateCount(1),
-		llms.WithMaxTokens(50),
+		// llms.WithCandidateCount(1),
+		// llms.WithMaxTokens(50),
 		llms.WithTemperature(0.8),
 		llms.WithStopWords(stopWords),
 	)
