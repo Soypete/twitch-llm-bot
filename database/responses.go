@@ -32,7 +32,7 @@ func (p Postgres) InsertAllResponses(ctx context.Context, chatId uuid.UUID, resp
 		stopReason = append(stopReason, choice.StopReason)
 	}
 	query := "INSERT INTO bot_responses (model_name, responses, stop_reasons, twitch_chat_id) VALUES ($1, $2, $3, $4)"
-	_, err := p.connections.ExecContext(ctx, query, p.modelName, pq.Array(text), stopReason, chatId)
+	_, err := p.connections.ExecContext(ctx, query, p.modelName, pq.Array(text), pq.Array(stopReason), chatId)
 	if err != nil {
 		return fmt.Errorf("error inserting all responses: %w", err)
 	}

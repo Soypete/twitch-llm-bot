@@ -16,7 +16,7 @@ import (
 func main() {
 	ctx := context.Background()
 	// this allows for a long call to the llm
-	ctx, _ = context.WithTimeout(ctx, 5*time.Minute)
+	// ctx, _ = context.WithTimeout(ctx, 5*time.Minute)
 
 	// setup postgres connection
 	db, err := database.NewPostgres()
