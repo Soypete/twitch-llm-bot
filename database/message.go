@@ -17,7 +17,7 @@ func (p Postgres) InsertMessage(ctx context.Context, msg v2.PrivateMessage) erro
 	if strings.HasPrefix(msg.Message, "!") {
 		isCommand = true
 	}
-	query := "INSERT INTO twitch_chat (username, message, isCommand, created_at) VALUES ($1, $2, $3, $4)"
+	query := "INSERT INTO twitch_chat (username, message, isCommand, created_at) VALUES ($1, $2, $3, $4);"
 	_, err := p.connections.ExecContext(ctx, query, msg.User.DisplayName, msg.Message, isCommand, msg.Time)
 	if err != nil {
 		log.Println("error inserting message: ", err)
@@ -28,7 +28,7 @@ func (p Postgres) InsertMessage(ctx context.Context, msg v2.PrivateMessage) erro
 
 func (p Postgres) AppendChatHistory(ctx context.Context, chatID uuid.UUID, message string, startTime time.Time, duration time.Duration) error {
 	query := `INSERT INTO chat_prompts (id, chats, start_time, end_time) VALUES ($1, $2, $3, $4) 
-	on conflict (id) do update array_append(chats, $2)`
+	on conflict (id) do update array_append(chats, $2);`
 	_, err := p.connections.ExecContext(context.Background(), query, chatID, message, startTime, startTime.Add(-duration))
 	if err != nil {
 		return fmt.Errorf("error inserting chat history: %w", err)

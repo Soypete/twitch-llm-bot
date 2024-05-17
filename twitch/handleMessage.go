@@ -2,7 +2,6 @@ package twitchirc
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -21,8 +20,7 @@ func (irc *IRC) HandleChat(msg v2.PrivateMessage) {
 	irc.llm.ChatHistory = append(irc.llm.ChatHistory,
 		llms.TextParts(llms.ChatMessageTypeHuman, msg.User.DisplayName, msg.Message))
 
-	chat := fmt.Sprintf("%s: %s", msg.User.DisplayName, msg.Message)
-	if err := irc.db.AppendChatHistory(ctx, irc.llm.LastChatID, chat, irc.llm.CurrentStartTime, irc.llm.Duration); err != nil {
+	if err := irc.db.InsertMessage(ctx, msg); err != nil {
 		log.Printf("Error appending chat history: %v", err)
 	}
 }
