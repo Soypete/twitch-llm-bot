@@ -21,6 +21,7 @@ func cleanMessage(msg v2.PrivateMessage) database.TwitchMessage {
 	if strings.HasPrefix(msg.Message, "!") {
 		chat.IsCommand = true
 	}
+
 	if strings.Contains(msg.User.DisplayName, "RestreamBot") {
 		words := strings.Split(msg.Message, "]")
 		chat.Username = strings.Replace(words[0], "Youtube:", "", 1) // sets username to the first word after the video source.
@@ -31,6 +32,9 @@ func cleanMessage(msg v2.PrivateMessage) database.TwitchMessage {
 
 func (irc *IRC) HandleChat(ctx context.Context, msg v2.PrivateMessage) {
 	chat := cleanMessage(msg)
+	if msg.User.DisplayName == "Nightbot" {
+		return
+	}
 	if err := irc.db.InsertMessage(ctx, chat); err != nil {
 		log.Println("Failed to insert message into database")
 	}
