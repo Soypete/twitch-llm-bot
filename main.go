@@ -47,14 +47,15 @@ func main() {
 	go func() {
 		log.Println("Starting prompt loop")
 		for {
-			timeout := 5 * time.Minute
+			timeout := 30 * time.Second
 			time.Sleep(timeout)
 			log.Println("Getting prompt")
 			prompt, err := llm.PromptWithChat(ctx, timeout)
 			// weird error handling
 			switch {
 			case err == nil:
-				irc.Client.Say("soypetetech", prompt)
+				fmt.Println(prompt)
+				// irc.Client.Say("soypetetech", prompt)
 			case strings.Contains(err.Error(), "no messages found"):
 				//TODO: this is very rare. we should just log this and move on
 				log.Println("No messages found, generating prompt without chat")
@@ -62,7 +63,7 @@ func main() {
 				if err != nil {
 					log.Println(err)
 				}
-				irc.Client.Say("soypetetech", prompt)
+				fmt.Println(prompt)
 			default:
 				log.Println(err)
 			}

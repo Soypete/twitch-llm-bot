@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/tmc/langchaingo/llms"
 )
 
@@ -27,8 +28,7 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 }
 
 func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent, error) {
-	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, pedroPrompt),
-		llms.TextParts(llms.ChatMessageTypeSystem, "Here is the twitch chat history for you to respond to:")}
+	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, pedroPrompt+"\nHere is the twitch chat history for you to respond to:")}
 	// get message history from database
 	messages, err := c.db.QueryMessageHistory(interval)
 	if err != nil {
@@ -37,12 +37,12 @@ func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent
 	if len(messages) == 0 {
 		return nil, fmt.Errorf("no messages found")
 	}
+	var twitchChatHistory []string
 	for _, message := range messages {
-		// Experiment using just the text and no username
-		prompt := message.Text
-		// prompt := fmt.Sprintf("%s: %s", message.Username, message.Text)
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, prompt))
+		twitchChatHistory = append(twitchChatHistory, fmt.Sprintf("%s: %s %s", message.Username, message.Text, message.Time.Format("2006-01-02 15:04:05")))
 	}
+	messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, twitchChatHistory...))
+	spew.Dump(messageHistory)
 	return messageHistory, nil
 }
 
