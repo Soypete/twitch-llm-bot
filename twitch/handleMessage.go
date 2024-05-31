@@ -35,6 +35,7 @@ func (irc *IRC) HandleChat(ctx context.Context, msg v2.PrivateMessage) {
 	if msg.User.DisplayName == "Nightbot" {
 		return
 	}
+	// TODO: respond to pedro commands
 	if err := irc.db.InsertMessage(ctx, chat); err != nil {
 		log.Println("Failed to insert message into database")
 	}
