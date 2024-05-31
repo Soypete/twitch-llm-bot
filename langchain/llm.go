@@ -72,6 +72,7 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 
 // cleanResponse removes any newlines from the response
 func cleanResponse(resp string) string {
+	fmt.Println("Response: ", resp)
 	// remove any newlines
 	resp = strings.ReplaceAll(resp, "\n", " ")
 	resp = strings.ReplaceAll(resp, "<|im_start|>user", " ")
