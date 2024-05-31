@@ -35,8 +35,7 @@ type TwitchMessage struct {
 
 func (p Postgres) QueryMessageHistory(interval time.Duration) ([]TwitchMessage, error) {
 	var messages []TwitchMessage
-	rows, err := p.connections.Query("
-select
+	rows, err := p.connections.Query(`select
   username,
   message,
   ts
@@ -55,7 +54,7 @@ from (
   limit 10
 ) subquery
 order by 
-  ts asc;")
+  ts asc;`)
 	if err != nil {
 		return nil, fmt.Errorf("error querying message history: %w", err)
 	}
