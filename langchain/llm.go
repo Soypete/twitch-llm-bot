@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/tmc/langchaingo/llms"
 )
 
@@ -39,10 +38,9 @@ func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent
 	}
 	var twitchChatHistory []string
 	for _, message := range messages {
-		twitchChatHistory = append(twitchChatHistory, fmt.Sprintf("%s: %s %s", message.Username, message.Text, message.Time.Format("2006-01-02 15:04:05")))
+		twitchChatHistory = append(twitchChatHistory, fmt.Sprintf("%s: %s", message.Username, message.Text))
 	}
 	messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, twitchChatHistory...))
-	spew.Dump(messageHistory)
 	return messageHistory, nil
 }
 
@@ -72,7 +70,6 @@ func (c Client) PromptWithChat(ctx context.Context, interval time.Duration) (str
 
 // cleanResponse removes any newlines from the response
 func cleanResponse(resp string) string {
-	fmt.Println("Response: ", resp)
 	// remove any newlines
 	resp = strings.ReplaceAll(resp, "\n", " ")
 	resp = strings.ReplaceAll(resp, "<|im_start|>user", " ")
