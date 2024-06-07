@@ -9,7 +9,7 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-const pedroPrompt = "Your name is Pedro_el_asistente. You are a chat bot that helps out in SoyPeteTech's twitch chat. You are allowed to use links, code, or emotes to express fun messages about software. Helpful links are always appreciated, such as SoyPeteTech's github https://github.com/Soypete, youtube https://www.youtube.com/channel/UCEkM7JXVQIdvz7Z7gG53lqw, or linktree https://linktr.ee/soypete_tech."
+const pedroPrompt = "Your name is Pedro_el_asistente. You are a chat bot that helps out in SoyPeteTech's twitch chat. If someone addresses you by name please respode by answering the question to the best of you ability. You are allowed to use links, code, or emotes to express fun messages about software. If you are unable to respond to a message politely ask the chat user to try again. If the chat user is being rude or inappropriate please ignore them. If you are unsure about a message please ask SoyPeteTech for help. Also make sure to remind chat to follow the streamer and to check out the or other social media links."
 
 func (c Client) callLLM(ctx context.Context, injection []string) (string, error) {
 	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, pedroPrompt),
@@ -35,7 +35,8 @@ func (c Client) callLLM(ctx context.Context, injection []string) (string, error)
 func cleanResponse(resp string) string {
 	// remove any newlines
 	resp = strings.ReplaceAll(resp, "\n", " ")
-	resp = strings.ReplaceAll(resp, "<|im_start|>user", " ")
+	resp = strings.ReplaceAll(resp, "<|im_start|>", " ")
+	resp = strings.ReplaceAll(resp, "<|im_end|>", "")
 	return strings.TrimSpace(resp)
 }
 
@@ -50,7 +51,7 @@ func (c Client) SingleMessageResponse(ctx context.Context, msg database.TwitchMe
 
 // GenerateTimer is a response from the LLM model from the list of helpful links and reminders
 func (c Client) GenerateTimer(ctx context.Context, jsonbody string) (string, error) {
-	prompt, err := c.callLLM(ctx, []string{fmt.Sprintf("here are some helpful links and reminders in a json format that you should use to help when generating your message. Pick one and them prompt chat to take action on it." + jsonbody)})
+	prompt, err := c.callLLM(ctx, []string{fmt.Sprintf("I have included some helpful links and below. I need you, Pedro, to use them to create a message for twitch chat that will encourage to find out more about me, the streamer, SoyPeteTech. I stream primarily Golang content but all of my streams are in the Software and Game development category." + jsonbody)})
 	if err != nil {
 		return "", err
 	}

@@ -16,7 +16,7 @@ import (
 func main() {
 	// read in json file with helpful links and prompts
 	// TODOL pass in file path as a flag
-	promtps, err := os.ReadFile("links.json")
+	prompts, err := os.ReadFile("links.txt")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -60,17 +60,17 @@ func main() {
 			timeout := 5 * time.Minute
 			time.Sleep(timeout)
 			// generate prompts
-			resp, err := llm.GenerateTimer(ctx, string(promtps))
+			resp, err := llm.GenerateTimer(ctx, string(prompts))
 			if err != nil {
 				log.Println(err)
+				continue
 			}
 			if resp == "" {
 				log.Println("empty response")
 				continue
 			}
 			// send message to twitch
-			// err = irc.Client.Say("soypetetech", resp)
-			fmt.Println(resp)
+			irc.Client.Say("soypetetech", resp)
 		}
 	}()
 

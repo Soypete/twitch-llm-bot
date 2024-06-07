@@ -22,9 +22,11 @@ func cleanMessage(msg v2.PrivateMessage) database.TwitchMessage {
 		chat.IsCommand = true
 	}
 	if strings.Contains(msg.User.DisplayName, "RestreamBot") {
-		words := strings.Split(msg.Message, "]")
-		chat.Username = strings.Replace(words[0], "Youtube:", "", 1) // sets username to the first word after the video source.
-		chat.Text = strings.Join(words[1:], " ")                     // create a clean message without the video source.
+		text := strings.ReplaceAll(msg.Message, "]", ":")
+		words := strings.Split(text, ":")
+
+		chat.Username = strings.TrimSpace(words[1]) // sets username to the first word after the video source.
+		chat.Text = strings.TrimSpace(words[2])     // create a clean message without the video source.
 	}
 	return chat
 }
