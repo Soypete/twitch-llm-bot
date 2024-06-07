@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -52,20 +51,19 @@ func main() {
 			log.Println("Getting prompt")
 			prompt, err := llm.PromptWithChat(ctx, timeout)
 			// weird error handling
-			switch {
-			case err == nil:
-				irc.Client.Say("soypetetech", prompt)
-			case strings.Contains(err.Error(), "no messages found"):
-				//TODO: this is very rare. we should just log this and move on
-				log.Println("No messages found, generating prompt without chat")
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			if prompt == "" {
+				log.Println("prompt is empty")
 				prompt, err = llm.PromptWithoutChat(ctx)
 				if err != nil {
 					log.Println(err)
+					continue
 				}
-				irc.Client.Say("soypetetech", prompt)
-			default:
-				log.Println(err)
 			}
+			irc.Client.Say("soypetetech", prompt)
 		}
 	}()
 

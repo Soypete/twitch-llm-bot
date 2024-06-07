@@ -27,8 +27,7 @@ func (c Client) PromptWithoutChat(ctx context.Context) (string, error) {
 }
 
 func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent, error) {
-	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, pedroPrompt),
-		llms.TextParts(llms.ChatMessageTypeSystem, "Here is the twitch chat history for you to respond to:")}
+	messageHistory := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, pedroPrompt+"\nHere is the twitch chat history for you to respond to:")}
 	// get message history from database
 	messages, err := c.db.QueryMessageHistory(interval)
 	if err != nil {
@@ -37,12 +36,11 @@ func (c Client) GetMessageHistory(interval time.Duration) ([]llms.MessageContent
 	if len(messages) == 0 {
 		return nil, fmt.Errorf("no messages found")
 	}
+	var twitchChatHistory []string
 	for _, message := range messages {
-		// Experiment using just the text and no username
-		prompt := message.Text
-		// prompt := fmt.Sprintf("%s: %s", message.Username, message.Text)
-		messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, prompt))
+		twitchChatHistory = append(twitchChatHistory, fmt.Sprintf("%s: %s", message.Username, message.Text))
 	}
+	messageHistory = append(messageHistory, llms.TextParts(llms.ChatMessageTypeHuman, twitchChatHistory...))
 	return messageHistory, nil
 }
 
