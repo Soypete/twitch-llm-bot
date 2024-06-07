@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
+	"os"
 	"sync"
 	"time"
 
@@ -13,7 +13,21 @@ import (
 	twitchirc "github.com/Soypete/twitch-llm-bot/twitch"
 )
 
+type links struct {
+	Links []struct {
+		Name string `json:"name"`
+		Url  string `json:"url"`
+	} `json:"links"`
+}
+
 func main() {
+	// read in json file with helpful links and prompts
+	// TODOL pass in file path as a flag
+	promtps, err := os.ReadFile("prompts.json")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	// TODO: 120 second timeout is to short. we need a better way to handle this
 	ctx := context.Background()
 	// setup postgres connection
@@ -46,26 +60,23 @@ func main() {
 	// TODO: break out of the main function
 	go func() {
 		log.Println("Starting prompt loop")
+		// replaces nightbot timers
+		// once every 5 minutes prompt the llm to generate a message
+		// that message will have the context
 		for {
 			timeout := 5 * time.Minute
 			time.Sleep(timeout)
-			log.Println("Getting prompt")
-			prompt, err := llm.PromptWithChat(ctx, timeout)
-			// weird error handling
-			switch {
-			case err == nil:
-				irc.Client.Say("soypetetech", prompt)
-			case strings.Contains(err.Error(), "no messages found"):
-				//TODO: this is very rare. we should just log this and move on
-				log.Println("No messages found, generating prompt without chat")
-				prompt, err = llm.PromptWithoutChat(ctx)
-				if err != nil {
-					log.Println(err)
-				}
-				irc.Client.Say("soypetetech", prompt)
-			default:
+			// generate prompts
+			resp, err := llm.GenerateTimer(string(promtps))
+			if err != nil {
 				log.Println(err)
 			}
+			if resp == "" {
+				log.Println("empty response")
+				continue
+			}
+			// send message to twitch
+			err = irc.Client.Say("soypetetech", resp)
 		}
 	}()
 

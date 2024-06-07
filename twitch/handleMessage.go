@@ -31,6 +31,13 @@ func cleanMessage(msg v2.PrivateMessage) database.TwitchMessage {
 
 func (irc *IRC) HandleChat(ctx context.Context, msg v2.PrivateMessage) {
 	chat := cleanMessage(msg)
+	// TODO: replace nitbot commands with a classifier model that prompts the LLM
+	if strings.Contains(chat.Text, "Pedro") || strings.Contains(chat.Text, "pedro") || strings.Contains(chat.Text, "soy_llm_bot") {
+		resp, err := irc.llm.SingleMessageResponse(ctx, chat.Text)
+		if err != nil {
+			log.Println("Failed to get response from LLM")
+		}
+	}
 	if err := irc.db.InsertMessage(ctx, chat); err != nil {
 		log.Println("Failed to insert message into database")
 	}
