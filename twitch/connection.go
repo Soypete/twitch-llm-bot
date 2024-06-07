@@ -16,7 +16,7 @@ const peteTwitchChannel = "soypetetech"
 
 // IRC Connection to the twitch IRC server.
 type IRC struct {
-	db     database.Postgres
+	db     database.MessageWriter
 	wg     sync.WaitGroup
 	Client *v2.Client
 	tok    *oauth2.Token
@@ -26,7 +26,7 @@ type IRC struct {
 // SetupTwitchIRC sets up the IRC, configures oauth, and inits connection functions.
 func SetupTwitchIRC(wg sync.WaitGroup, llm *langchain.Client, db database.Postgres) (*IRC, error) {
 	irc := &IRC{
-		db:  db,
+		db:  &db,
 		wg:  wg,
 		llm: llm,
 	}

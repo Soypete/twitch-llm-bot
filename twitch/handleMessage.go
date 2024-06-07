@@ -29,15 +29,33 @@ func cleanMessage(msg v2.PrivateMessage) database.TwitchMessage {
 	return chat
 }
 
+func needsResponseChat(msg database.TwitchMessage) bool {
+	switch {
+	case strings.Contains(msg.Text, "pedro"):
+		return true
+	case strings.Contains(msg.Text, "Pedro"):
+		return true
+	case strings.Contains(msg.Text, "llm"):
+		return true
+	case strings.Contains(msg.Text, "LLM"):
+		return true
+	case strings.Contains(msg.Text, "bot"):
+		return true
+	default:
+		return false
+	}
+}
+
 func (irc *IRC) HandleChat(ctx context.Context, msg v2.PrivateMessage) {
 	chat := cleanMessage(msg)
-	// TODO: replace nitbot commands with a classifier model that prompts the LLM
-	if strings.Contains(chat.Text, "Pedro") || strings.Contains(chat.Text, "pedro") || strings.Contains(chat.Text, "soy_llm_bot") {
-		resp, err := irc.llm.SingleMessageResponse(ctx, chat.Text)
+	if needsResponseChat(chat) {
+		resp, err := irc.llm.SingleMessageResponse(ctx, chat)
 		if err != nil {
 			log.Println("Failed to get response from LLM")
 		}
+		log.Println(resp)
 	}
+	// TODO: replace nitbot commands with a classifier model that prompts the LLM
 	if err := irc.db.InsertMessage(ctx, chat); err != nil {
 		log.Println("Failed to insert message into database")
 	}

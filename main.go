@@ -13,17 +13,10 @@ import (
 	twitchirc "github.com/Soypete/twitch-llm-bot/twitch"
 )
 
-type links struct {
-	Links []struct {
-		Name string `json:"name"`
-		Url  string `json:"url"`
-	} `json:"links"`
-}
-
 func main() {
 	// read in json file with helpful links and prompts
 	// TODOL pass in file path as a flag
-	promtps, err := os.ReadFile("prompts.json")
+	promtps, err := os.ReadFile("links.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -67,7 +60,7 @@ func main() {
 			timeout := 5 * time.Minute
 			time.Sleep(timeout)
 			// generate prompts
-			resp, err := llm.GenerateTimer(string(promtps))
+			resp, err := llm.GenerateTimer(ctx, string(promtps))
 			if err != nil {
 				log.Println(err)
 			}
@@ -76,7 +69,8 @@ func main() {
 				continue
 			}
 			// send message to twitch
-			err = irc.Client.Say("soypetetech", resp)
+			// err = irc.Client.Say("soypetetech", resp)
+			fmt.Println(resp)
 		}
 	}()
 
