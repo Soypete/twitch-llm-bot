@@ -17,7 +17,7 @@ func (c Client) callLLM(ctx context.Context, injection []string) (string, error)
 
 	resp, err := c.llm.GenerateContent(ctx, messageHistory,
 		llms.WithCandidateCount(1),
-		llms.WithMaxLength(100),
+		llms.WithMaxLength(500),
 		llms.WithTemperature(0.7),
 		llms.WithPresencePenalty(1.0), // 2 is the largest penalty for using a work that has already been used
 		llms.WithStopWords([]string{"twitch", "stream", "SoyPeteTech", "bot", "assistant", "silent", "software"}))
@@ -51,7 +51,7 @@ func (c Client) SingleMessageResponse(ctx context.Context, msg database.TwitchMe
 
 // GenerateTimer is a response from the LLM model from the list of helpful links and reminders
 func (c Client) GenerateTimer(ctx context.Context, jsonbody string) (string, error) {
-	prompt, err := c.callLLM(ctx, []string{fmt.Sprintf("I have included some helpful links and below. I need you, Pedro, to use them to create a message for twitch chat that will encourage to find out more about me, the streamer, SoyPeteTech. I stream primarily Golang content but all of my streams are in the Software and Game development category." + jsonbody)})
+	prompt, err := c.callLLM(ctx, []string{fmt.Sprintf("Respond with a twitch chat message for the SoyPeteTech twitch chat. The message should encourage the users to interact with Pete via the stream or other social media outlets (included in the json below). Keep the message short and direct. Make sure you are address chat as chat. make sure to include a call to action." + jsonbody)})
 	if err != nil {
 		return "", err
 	}
