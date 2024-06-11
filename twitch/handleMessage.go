@@ -55,7 +55,7 @@ func (irc *IRC) HandleChat(ctx context.Context, msg v2.PrivateMessage) {
 		if err != nil {
 			log.Println("Failed to get response from LLM")
 		}
-		log.Println(resp)
+		irc.Client.Say("soypetetech", resp)
 	}
 	// TODO: replace nitbot commands with a classifier model that prompts the LLM
 	if err := irc.db.InsertMessage(ctx, chat); err != nil {
