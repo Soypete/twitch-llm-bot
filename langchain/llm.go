@@ -20,7 +20,7 @@ func (c Client) callLLM(ctx context.Context, injection []string) (string, error)
 		llms.WithMaxLength(500),
 		llms.WithTemperature(0.7),
 		llms.WithPresencePenalty(1.0), // 2 is the largest penalty for using a work that has already been used
-		llms.WithStopWords([]string{"twitch", "stream", "SoyPeteTech", "bot", "assistant", "silent", "software"}))
+		llms.WithStopWords([]string{"LUL, PogChamp, Kappa, KappaPride, KappaRoss, KappaWealth"}))
 	if err != nil {
 		return "", fmt.Errorf("failed to get llm response: %w", err)
 	}
